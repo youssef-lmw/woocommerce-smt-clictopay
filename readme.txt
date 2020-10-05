@@ -5,7 +5,9 @@
 
 **Caractéristiques et fonctionnalités du module WooCommerce SMT ClicToPay** :
 
-- Compatible avec la version 5.5.1
+- Compatible avec la version wordpress 5.5.1.
+
+- Compatible avec la version WooCommerce 4.5.2.
 
 - Accepter les paiements par carte de crédit tunisienne.
 
@@ -40,3 +42,7 @@ Source
 2. https://github.com/sunnyluthra/smt-woocommerce-payment-gateway
 
 3. https://github.com/BesrourMS/ClicToPay-Woocommerce
+
+
+
+

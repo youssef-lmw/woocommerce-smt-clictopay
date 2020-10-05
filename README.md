@@ -16,7 +16,7 @@
 Installation
 ------------
 
-1. Téléchargez [la dernière version de GitHub](https://github.com/qTranslate/qtranslate-xt/releases) au format zip.
+1. Téléchargez [la dernière version de GitHub](https://github.com/youssef-lmw/woocommerce-smt-clictopay) au format zip.
 
 2. Décompressez l'archive dans votre dossier plugins et renommez-la WooCommerce SMT ClicToPay.
 

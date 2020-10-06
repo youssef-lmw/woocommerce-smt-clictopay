@@ -2,9 +2,9 @@
 /*
 Plugin Name: WooCommerce SMT ClicToPay
 Plugin URI: http://lightmyweb.fr/
-Description: Ce module vous permet d'accepter les paiements en ligne par SPS Clictopay SMT par Light My Web.
+Description: Ce module vous permet d'accepter les paiements en ligne par SPS Clictopay SMT (Light My Web).
 Version: 1.1.0
-Author: Youssef Gharbi
+Author: Light My Web (Youssef Gharbi)
 Author URI: https://www.linkedin.com/in/gharbi-youssef-b38b451a2/
 */
 

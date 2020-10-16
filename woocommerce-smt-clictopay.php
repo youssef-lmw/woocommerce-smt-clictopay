@@ -178,8 +178,12 @@ function woocommerce_yg_smt_init() {
          **/
         function process_payment($order_id){
             $order = new WC_Order($order_id);
-            return array('result' => 'success', 'redirect' => add_query_arg('order',
-                $order->id, add_query_arg('key', $order->order_key, get_permalink(get_option('woocommerce_pay_page_id'))))
+            // return array('result' => 'success', 'redirect' => add_query_arg('order',
+            //     $order->id, add_query_arg('key', $order->order_key, get_permalink(get_option('woocommerce_pay_page_id'))))
+            // );
+             return array(
+                'result' => 'success',
+                'redirect'  => $order->get_checkout_payment_url( true )
             );
         }
         /**

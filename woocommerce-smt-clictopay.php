@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: WooCommerce SMT ClicToPay
+Plugin Name: WooCommerce SMT ClicToPay V1
 Plugin URI: http://lightmyweb.fr/
 Description: Ce module vous permet d'accepter les paiements en ligne par SPS Clictopay SMT (Light My Web).
 Version: 1.1.0
@@ -56,7 +56,7 @@ function woocommerce_yg_smt_init() {
             $this->id = 'yg_smt';
             $this->method_title = __('SMT ClicToPay', 'yg-smt-woocommerce-payment-gatway');
             $this->method_description = 'Accepter les paiements par ClicToPay SMT';
-            $this->icon = 'https://lightmyweb.fr/uploads/ClicToPay_logo.png';
+            $this->icon = 'http://www.clictopay.com.tn/public_html/img/ClicToPay_logo.png';
             $this ->has_fields = false;
             $this->init_form_fields();
             $this->init_settings();
@@ -111,7 +111,7 @@ function woocommerce_yg_smt_init() {
                     'title' => __('Sandbox Url:', 'yg-smt-woocommerce-payment-gatway'),
                     'type'=> 'text',
                     'description' => __('This controls the sandbox gateway url.', 'yg-smt-woocommerce-payment-gatway'),
-                    'default' => 'https://www.smt-sps.com.tn/paiement/'),
+                    'default' => 'https://clictopay.monetiquetunisie.com/clicktopay/ '),
                 'sandbox' => array(
                     'title' => __('Sandbox Mode:', 'yg-smt-woocommerce-payment-gatway'),
                     'type' => 'checkbox',
@@ -181,7 +181,7 @@ function woocommerce_yg_smt_init() {
             // return array('result' => 'success', 'redirect' => add_query_arg('order',
             //     $order->id, add_query_arg('key', $order->order_key, get_permalink(get_option('woocommerce_pay_page_id'))))
             // );
-             return array(
+            return array(
                 'result' => 'success',
                 'redirect'  => $order->get_checkout_payment_url( true )
             );

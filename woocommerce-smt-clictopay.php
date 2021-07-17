@@ -1,258 +1,228 @@
 <?php
 /*
-Plugin Name: WooCommerce SMT ClicToPay V1
-Plugin URI: http://lightmyweb.fr/
-Description: Ce module vous permet d'accepter les paiements en ligne par SPS Clictopay SMT (Light My Web).
-Version: 1.1.0
-Author: Light My Web (Youssef Gharbi)
+Plugin Name: WooCommerce SMT ClicToPay V2
+Plugin URI: https://www.linkedin.com/in/gharbi-youssef-b38b451a2/
+Description: Ce module vous permet d'accepter les paiements en ligne par SPS Clictopay SMT
+Version: 2.0.1
+Author: Youssef Gharbi
 Author URI: https://www.linkedin.com/in/gharbi-youssef-b38b451a2/
 */
+function wc_ctp_add_clictopay_check_payment_page()
+{
+    if(get_page_by_title( 'ClicToPay Check Payment' )==null){
+        $my_post = array(
+            'post_title' => wp_strip_all_tags('ClicToPay Check Payment'),
+            'post_content' => '[clictopay_check_payment]',
+            'post_status' => 'publish',
+            'post_author' => 1,
+            'post_type' => 'page',
+        );
 
-if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
+        wp_insert_post($my_post);
+    }
 }
-add_action('plugins_loaded', 'woocommerce_yg_smt_init', 0);
 
-function woocommerce_yg_smt_init() {
+register_activation_hook(__FILE__, 'wc_ctp_add_clictopay_check_payment_page');
 
-    if ( !class_exists( 'WC_Payment_Gateway' ) ) return;
 
-    $plugin_dir = basename(dirname(__FILE__));
-    load_plugin_textdomain( 'yg-smt-woocommerce-payment-gatway', false, $plugin_dir. '/languages/' );
+/*
+ * Create failed payment page
+ */
+function wc_ctp_add_failed_payment_page()
+{
+    if(get_page_by_title( 'Failed Payment' )==null){
+        $my_post = array(
+            'post_title' => wp_strip_all_tags('Failed Payment'),
+            'post_content' => 'Failed Payment',
+            'post_status' => 'publish',
+            'post_author' => 1,
+            'post_type' => 'page',
+        );
 
-    if(empty(get_woocommerce_currency_symbol('TND'))){
-        add_filter( 'woocommerce_currencies', 'add_tnd_currency' );
-
-        add_filter('woocommerce_currency_symbol', 'add_tnd_currency_symbol', 10, 2);
+        wp_insert_post($my_post);
     }
-    /**
-     * Add the Gateway to WooCommerce
-     **/
-    function woocommerce_add_yg_smt_gateway($methods) {
-        $methods[] = 'WC_Yg_SMT';
-        return $methods;
-    }
+}
 
-    function add_tnd_currency( $currencies ) {
-        $currencies['TND'] = __( 'Tunisian Dinar', 'woocommerce' );
-        return $currencies;
-    }
+register_activation_hook(__FILE__, 'wc_ctp_add_failed_payment_page');
 
-    function add_tnd_currency_symbol( $currency_symbol, $currency ) {
-        switch( $currency ) {
-            case 'TND': $currency_symbol = 'TND'; break;
-        }
-        return $currency_symbol;
-    }
+/*
+ * This action hook registers our PHP class as a WooCommerce payment gateway
+ */
+add_filter('woocommerce_payment_gateways', 'wc_ctp_add_credit_card_gateway_class');
+function wc_ctp_add_credit_card_gateway_class($gateways)
+{
+    $gateways[] = 'WC_ClicToPay_Credit_Card_Gateway';
+    return $gateways;
+}
 
-    add_filter('woocommerce_payment_gateways', 'woocommerce_add_yg_smt_gateway' );
+/*
+ * The class itself, please note that it is inside plugins_loaded action hook
+ */
+add_action('plugins_loaded', 'wc_ctp_init_credit_card_gateway_class');
+function wc_ctp_init_credit_card_gateway_class()
+{
 
-    /**
-     * Gateway class
-     */
-    class WC_Yg_SMT extends WC_Payment_Gateway {
-        public function __construct(){
+    class WC_ClicToPay_Credit_Card_Gateway extends WC_Payment_Gateway
+    {
 
-            $this->id = 'yg_smt';
-            $this->method_title = __('SMT ClicToPay', 'yg-smt-woocommerce-payment-gatway');
-            $this->method_description = 'Accepter les paiements par ClicToPay SMT';
-            $this->icon = 'http://www.clictopay.com.tn/public_html/img/ClicToPay_logo.png';
-            $this ->has_fields = false;
+        /**
+         * Class constructor
+         */
+        public function __construct()
+        {
+
+            $this->id = 'cc_ctp'; // payment gateway plugin ID
+            $this->icon = ''; // URL of the icon that will be displayed on checkout page near your gateway name
+            $this->has_fields = false; // in case you need a custom credit card form
+            $this->method_title = 'Credit Card using ClicToPay';
+            $this->method_description = 'Enable paying with Credit Card using ClicToPay'; // will be displayed on the options page
+
+            // gateways can support subscriptions, refunds, saved payment methods,
+            // but in this tutorial we begin with simple payments
+            $this->supports = array(
+                'products'
+            );
+
+            // Method with all the options fields
             $this->init_form_fields();
-            $this->init_settings();
 
+            // Load the settings.
+            $this->init_settings();
             $this->title = $this->get_option('title');
             $this->description = $this->get_option('description');
-            $this->affilie = $this->get_option('affilie');
+            $this->enabled = $this->get_option('enabled');
+            $this->testmode = 'yes' === $this->get_option('testmode');
+            $this->username = $this->get_option('username');
+            $this->password = $this->get_option('password');
 
-            $this->liveurl = ($this->get_option('sandbox') == 'yes') ? $this->get_option('sandbox_url') : $this->get_option('production_url');
+            // This action hook saves the settings
+            add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 
-            if ( version_compare( WOOCOMMERCE_VERSION, '2.0.0', '>=' ) ) {
-                add_action( 'woocommerce_api_' . strtolower( get_class( $this ) ), array( $this, 'check_smt_response' ) );
-            } else {
-                add_action('init', array(&$this, 'check_smt_response'));
-            }
+            // We need custom JavaScript to obtain a token
+            add_action('wp_enqueue_scripts', array($this, 'payment_scripts'));
 
-            if ( version_compare( WOOCOMMERCE_VERSION, '2.0.0', '>=' ) ) {
-                add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( &$this, 'process_admin_options' ) );
-            } else {
-                add_action( 'woocommerce_update_options_payment_gateways', array( &$this, 'process_admin_options' ) );
-            }
-            add_action('woocommerce_receipt_yg_smt', array(&$this, 'receipt_page'));
+            // You can also register a webhook here
+            // add_action('woocommerce_api_clictopay', array($this, 'webhook'));
         }
-        function init_form_fields(){
 
+        public function get_instance()
+        {
+            return $this; // return the object
+        }
+
+        /**
+         * Plugin options
+         */
+        public function init_form_fields()
+        {
             $this->form_fields = array(
                 'enabled' => array(
-                    'title' => __('Enable/Disable:', 'yg-smt-woocommerce-payment-gatway'),
+                    'title' => 'Enable/Disable',
+                    'label' => 'Credit Card using ClicToPay',
                     'type' => 'checkbox',
-                    'label' => __('Enable SMT Payment Module.', 'yg-smt-woocommerce-payment-gatway'),
-                    'default' => 'no'),
+                    'description' => '',
+                    'default' => 'no'
+                ),
                 'title' => array(
-                    'title' => __('Title:', 'yg-smt-woocommerce-payment-gatway'),
-                    'type'=> 'text',
-                    'description' => __('This controls the title which the user sees during checkout.', 'yg-smt-woocommerce-payment-gatway'),
-                    'default' => __('SMT', 'yg-smt-woocommerce-payment-gatway')),
-                'description' => array(
-                    'title' => __('Description:', 'yg-smt-woocommerce-payment-gatway'),
-                    'type' => 'textarea',
-                    'description' => __('This controls the description which the user sees during checkout.', 'yg-smt-woocommerce-payment-gatway'),
-                    'default' => __('', 'yg-smt-woocommerce-payment-gatway')),
-                'affilie' => array(
-                    'title' => __('Affiliate:', 'yg-smt-woocommerce-payment-gatway'),
+                    'title' => 'Title',
                     'type' => 'text',
-                    'description' => __('')),
-                'production_url' => array(
-                    'title' => __('Production Url:', 'yg-smt-woocommerce-payment-gatway'),
-                    'type'=> 'text',
-                    'description' => __('This controls the production gateway url.', 'yg-smt-woocommerce-payment-gatway'),
-                    'default' => 'https://www.smt-sps.com.tn/paiement/'),
-                'sandbox_url' => array(
-                    'title' => __('Sandbox Url:', 'yg-smt-woocommerce-payment-gatway'),
-                    'type'=> 'text',
-                    'description' => __('This controls the sandbox gateway url.', 'yg-smt-woocommerce-payment-gatway'),
-                    'default' => 'https://clictopay.monetiquetunisie.com/clicktopay/ '),
-                'sandbox' => array(
-                    'title' => __('Sandbox Mode:', 'yg-smt-woocommerce-payment-gatway'),
+                    'description' => 'This controls the title which the user sees during checkout.',
+                    'default' => 'Carte de crédit',
+                    'desc_tip' => true,
+                ),
+                'description' => array(
+                    'title' => 'Description',
+                    'type' => 'textarea',
+                    'description' => 'This controls the description which the user sees during checkout.',
+                    'default' => 'Payer avec votre carte bancaire à travers le service ClicToPay.',
+                ),
+                'testmode' => array(
+                    'title' => 'Test mode',
+                    'label' => 'Enable Test Mode',
                     'type' => 'checkbox',
-                    'label' => __('Enable Sandbox Mode.', 'yg-smt-woocommerce-payment-gatway'),
-                    'default' => 'no')
-            );
-
-        }
-
-        /**
-         * Receipt Page
-         **/
-        function receipt_page($order){
-            echo '<p>'.__('Thank you for your order, please click the button below to pay with SMT Payment Gateway.', 'yg-smt-woocommerce-payment-gatway').'</p>';
-            echo $this->generate_smt_form($order);
-        }
-
-        /**
-         * Generate SMT button link
-         **/
-        public function generate_smt_form($order_id){
-            $order = new WC_Order($order_id);
-            $smt_args = array(
-                'affilie' => $this->affilie,
-                'devise' => get_woocommerce_currency(),
-                'reference' => $order_id,
-                'montant' => number_format($order->order_total, 3, '.', ''),
-                'sid' => $order_id,
-                'sandbox' => $this->get_option('sandbox')
-            );
-
-            $smt_args_array = array();
-            foreach($smt_args as $key => $value){
-                $smt_args_array[] = "<input type='hidden' name='$key' value='$value'/>";
-            }
-            return '<form action="'.$this->liveurl.'" method="post" id="smt_payment_form">
-        ' . implode('', $smt_args_array) . '
-        <input type="submit" class="button-alt" id="submit_smt_payment_form" value="'.__('Pay via SMT', 'yg-smt-woocommerce-payment-gatway').'" /> <a class="button cancel" href="'.$order->get_cancel_order_url().'">'.__('Cancel order &amp; restore cart', 'yg-smt-woocommerce-payment-gatway').'</a>
-        </form>';
-
-
-        }
-
-
-        /**
-         * Admin Panel Options
-         **/
-        public function admin_options(){
-            $ipn_url = site_url('/wc-api/'.get_class( $this ).'/');
-
-            echo '<h3>'.__('SMT Payment Gateway', 'yg-smt-woocommerce-payment-gatway').'</h3>';
-            echo '<p>'.__('', 'yg-smt-woocommerce-payment-gatway').'</p>';
-            echo '<p>'.__( 'Notification URL:', 'yg-smt-woocommerce-payment-gatway' ).' <b><i>'.$ipn_url.'</i></b></p>';
-            echo '<p>'.__( 'Success URL:', 'yg-smt-woocommerce-payment-gatway' ).' <b><i>'.$ipn_url.'?Action=SUCCESS</i></b></p>';
-            echo '<p>'.__( 'ERROR URL:', 'yg-smt-woocommerce-payment-gatway' ).' <b><i>'.$ipn_url.'?Action=ERROR</i></b></p>';
-
-            echo '<table class="form-table">';
-            $this->generate_settings_html();
-            echo '</table>';
-
-        }
-        /**
-         * Process the payment and return the result
-         **/
-        function process_payment($order_id){
-            $order = new WC_Order($order_id);
-            // return array('result' => 'success', 'redirect' => add_query_arg('order',
-            //     $order->id, add_query_arg('key', $order->order_key, get_permalink(get_option('woocommerce_pay_page_id'))))
-            // );
-            return array(
-                'result' => 'success',
-                'redirect'  => $order->get_checkout_payment_url( true )
+                    'description' => 'Place the payment gateway in test mode using test API keys.',
+                    'default' => 'yes',
+                    'desc_tip' => true,
+                ),
+                'username' => array(
+                    'title' => 'Api-User Login',
+                    'type' => 'text',
+                    'description' => 'Provided by ClicToPay'
+                ),
+                'password' => array(
+                    'title' => 'Api-User Password',
+                    'type' => 'password',
+                    'description' => 'Provided by ClicToPay'
+                )
             );
         }
-        /**
-         * Check for valid SMT server callback
-         **/
-        function check_smt_response(){
+
+        public function payment_scripts()
+        {
+        }
+
+        /*
+         * We're processing the payments here
+         */
+        public function process_payment($order_id)
+        {
+
             global $woocommerce;
 
-            $reference = (int)$_GET['Reference'];
-            $action = $_GET['Action'];
-            $param = $_GET['Param'];
-            $order = new WC_Order($reference);
+            $order = wc_get_order($order_id);
 
-            switch($action) {
-                case "DETAIL":
-                    die("Reference=".$reference."&Action=".$action."&Reponse=".$order->order_total);
-                    break;
+            $response = wp_remote_get(($this->testmode ? 'https://test.' : 'https://ipay.') . 'clictopay.com/payment/rest/register.do?currency=788&amount=' . str_replace('.', '', $order->get_total()) . '&orderNumber=' . $order_id . '&password=' . $this->password . '&returnUrl='.get_site_url().'/clictopay-check-payment&userName=' . $this->username);
 
-                case "ERREUR":
-                    die("Reference=".$reference. "&Action=".$action."&Reponse=OK");
-                    break;
+            $body = json_decode($response['body'], true);
 
-                case "ACCORD":
-                    $order->payment_complete();
-                    $order->add_order_note('SMT payment successful<br/>Transaction Id: '.$param);
-                    $woocommerce->cart->empty_cart();
-
-                    die("Reference=".$reference. "&Action=".$action."&Reponse=OK");
-                    break;
-
-                case "REFUS":
-                    die("Reference=".$reference. "&Action=".$action."&Reponse=OK");
-                    break;
-
-                case "ANNULATION":
-                    die("Reference=".$reference. "&Action=".$action."&Reponse=OK");
-                    break;
-
-                case "SUCCESS":
-                    $customer_orders = get_posts( array(
-                        'numberposts' => -1,
-                        'meta_key'    => '_customer_user',
-                        'meta_value'  => get_current_user_id(),
-                        'post_type'   => wc_get_order_types(),
-                        'post_status' => array_keys( wc_get_order_statuses() ),
-                    ) );
-                    $order = new WC_Order( $customer_orders[ 0 ]->ID );
-                    wp_redirect( site_url('/checkout/'.get_option( 'woocommerce_checkout_order_received_endpoint' ).'/'.$order->id.'/?key='.$order->order_key));
-
-                    die;
-                    break;
-
-                case "ERROR":
-                    wc_add_notice( __('Payment error:', 'yg-smt-woocommerce-payment-gatway') . __(' An error occurred during the payment process', 'yg-smt-woocommerce-payment-gatway'), 'error' );
-                    $customer_orders = get_posts( array(
-                        'numberposts' => -1,
-                        'meta_key'    => '_customer_user',
-                        'meta_value'  => get_current_user_id(),
-                        'post_type'   => wc_get_order_types(),
-                        'post_status' => array_keys( wc_get_order_statuses() ),
-                    ) );
-                    $order = new WC_Order( $customer_orders[ 0 ]->ID );
-                    wp_redirect( site_url('/checkout/?order='.$order->id.'&key='.$order->order_key));
-
-                    die;
-                    break;
+            if (isset($body['errorCode'])) {
+                wc_add_notice($body['errorMessage'], 'error');
+                return;
             }
+
+            return array(
+                'result' => 'success',
+                'redirect' => $body['formUrl']
+            );
+
+        }
+
+        public function webhook()
+        {
+        }
+
+        /*
+         * Check if the payment is successful or not and redirect to correct page
+         */
+        public function clictopay_check_payment()
+        {
+
+            $response = wp_remote_get(($this->testmode ? 'https://test.' : 'https://ipay.') . 'clictopay.com/payment/rest/getOrderStatus.do?orderId=' . $_GET['orderId'] . '&password=' . $this->password . '&userName=' . $this->username);
+
+            $body = json_decode($response['body'], true);
+
+            if ($body['ErrorMessage'] === 'Success') {
+                global $woocommerce;
+
+                $order = wc_get_order($body['OrderNumber']);
+                // we received the payment
+                $order->payment_complete();
+                $order->reduce_order_stock();
+
+                // Empty cart
+                $woocommerce->cart->empty_cart();
+
+                $redirect = $this->get_return_url($order);
+            } else {
+                $redirect = get_site_url().'/failed-payment/';
+            }
+            wp_redirect($redirect);
+            return;
         }
     }
+
+    add_shortcode('clictopay_check_payment', [new WC_ClicToPay_Credit_Card_Gateway, 'clictopay_check_payment']);
 }
+
 
 ?>

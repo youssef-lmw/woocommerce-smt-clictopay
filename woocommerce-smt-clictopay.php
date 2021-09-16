@@ -171,7 +171,7 @@ function wc_ctp_init_credit_card_gateway_class()
 
             $order = wc_get_order($order_id);
 
-            $response = wp_remote_get(($this->testmode ? 'https://test.' : 'https://ipay.') . 'clictopay.com/payment/rest/register.do?currency=788&amount=' . str_replace('.', '', $order->get_total()) . '&orderNumber=' . $order_id . '&password=' . $this->password . '&returnUrl='.get_site_url().'/clictopay-check-payment&userName=' . $this->username);
+            $response = wp_remote_get(($this->testmode ? 'https://test.' : 'https://ipay.') . 'clictopay.com/payment/rest/register.do?currency=788&amount=' . ($order->get_total() * 1000) . '&orderNumber=' . $order_id . '&password=' . $this->password . '&returnUrl='.get_site_url().'/clictopay-check-payment&userName=' . $this->username);
 
             $body = json_decode($response['body'], true);
 

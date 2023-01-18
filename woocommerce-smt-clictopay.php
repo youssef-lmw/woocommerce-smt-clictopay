@@ -175,7 +175,7 @@ function wc_ctp_init_credit_card_gateway_class()
 
             $body = json_decode($response['body'], true);
 
-            if (isset($body['errorCode'])) {
+            if (isset($body['errorCode']) && (int)$body['errorCode'] !== 0) {
                 wc_add_notice($body['errorMessage'], 'error');
                 return;
             }

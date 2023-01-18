@@ -1,13 +1,13 @@
 # ClicToPay-Monétique-Tunisie-2020
 
-**WooCommerce SMT ClicToPay** est un module **Wordpress** de paiement en ligne pour **SPS Monétique Tunisie**.
+**WooCommerce SMT ClicToPay** est un module **WordPress** de paiement en ligne pour **SPS Monétique Tunisie**.
 
 
 **Caractéristiques et fonctionnalités du module WooCommerce SMT ClicToPay** :
 
-- Compatible avec la version wordpress 5.5.1.
+- Compatible avec la version wordpress 6.6.1.
 
-- Compatible avec la version WooCommerce 4.5.2.
+- Compatible avec la version WooCommerce 7.3.0.
 
 - Accepter les paiements par carte de crédit tunisienne.
 

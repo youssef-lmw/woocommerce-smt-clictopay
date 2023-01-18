@@ -1,4 +1,4 @@
-# ClicToPay-Monétique-Tunisie-2023
+# ClicToPay-Monétique-Tunisie-2023 Wordpress
 
 **WooCommerce SMT ClicToPay** est un module **WordPress** de paiement en ligne pour **SPS Monétique Tunisie**.
 

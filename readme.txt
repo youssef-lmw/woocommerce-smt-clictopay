@@ -1,48 +1,84 @@
-# ClicToPay-Monétique-Tunisie-2020
+=== WooCommerce SMT ClicToPay ===
+Contributors: youssef-lmw
+Tags: woocommerce, payment gateway, clictopay, monetique tunisie, tunisie
+Requires at least: 5.0
+Tested up to: 6.7
+Requires PHP: 7.2
+Stable tag: 3.0.0
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-**WooCommerce SMT ClicToPay** est un module **WordPress** de paiement en ligne pour **SPS Monétique Tunisie**.
+Accepter les paiements en ligne par carte bancaire via SPS ClicToPay (Monétique Tunisie) dans WooCommerce.
 
+== Description ==
 
-**Caractéristiques et fonctionnalités du module WooCommerce SMT ClicToPay** :
+Ce module permet à une boutique WooCommerce d'accepter les paiements par carte bancaire tunisienne via la plateforme ClicToPay de Monétique Tunisie.
 
-- Compatible avec la version wordpress 6.6.1.
+L'intégration suit le manuel d'intégration ClicToPay : la commande est enregistrée par `register.do`, le client est redirigé vers la page de paiement ClicToPay, et le résultat est systématiquement confirmé côté serveur par `getOrderStatusExtended.do`. Une commande n'est marquée payée que lorsque `orderStatus` vaut 2 : la redirection du navigateur n'est jamais considérée comme une preuve de paiement.
 
-- Compatible avec la version WooCommerce 7.3.0.
+Devises prises en charge : TND (788), EUR (978), USD (840).
 
-- Accepter les paiements par carte de crédit tunisienne.
+= Fonctionnalités =
 
+* Paiement par carte bancaire avec 3-D Secure géré par ClicToPay.
+* Vérification obligatoire du statut via getOrderStatusExtended.do.
+* URLs de retour et d'échec servies par l'endpoint /wc-api/cfw_ctp_return, protégées par la clé de commande.
+* Numéro de commande suffixé par tentative : un paiement réessayé ne déclenche plus l'erreur de doublon.
+* Journalisation complète des échanges API, mot de passe masqué.
+* Écran d'exécution des tests d'intégration depuis le site marchand.
+* Compatible HPOS.
 
+== Installation ==
 
-Installation
-------------
+1. Téléversez le dossier `woocommerce-smt-clictopay` dans `/wp-content/plugins/`.
+2. Activez le module depuis le menu « Extensions » de WordPress.
+3. Allez dans WooCommerce > Réglages > onglet Paiements.
+4. Ouvrez « Credit Card using ClicToPay » et saisissez vos identifiants API.
 
-1. Téléchargez [la dernière version de GitHub](https://github.com/youssef-lmw/woocommerce-smt-clictopay) au format zip.
+Aucune page n'est à créer. Le site doit être accessible en HTTPS depuis Internet pour que ClicToPay puisse y rediriger le client.
 
-2. Décompressez l'archive dans votre dossier plugins et renommez-la WooCommerce SMT ClicToPay.
+== Frequently Asked Questions ==
 
-3. Activez WooCommerce SMT ClicToPay via la page d'administration 'Plugins' de WordPress (/wp-admin/plugins.php).
+= Le module gère-t-il les paiements récurrents ? =
 
+Non.
 
-Configuration
--------------
+= Un certificat SSL est-il obligatoire ? =
 
-1. Cliquez sur le bouton ``Configurer`` du module ``WooCommerce SMT ClicToPay``.
+Oui.
 
-2. Remplissez le champ ``Affilie``
+= Comment valider l'intégration auprès de ClicToPay ? =
 
-3. Choisir le mode de fonctionnement dans le champ ``Sandbox`` 
+Ouvrez WooCommerce > ClicToPay Tests. Cet écran exécute depuis votre site les cas qu'un tunnel de commande normal ne produit pas (paramètre manquant, numéro de commande dupliqué, orderId inconnu) et affiche la réponse JSON brute à reporter dans la grille de validation qui vous a été transmise. Chaque appel est également écrit dans WooCommerce > État > Journaux, source « clictopay ».
 
-4. Mettez à jour la configuration.
+= Mes réglages sont-ils conservés depuis la version 2 ? =
 
+Oui. L'identifiant de passerelle et les clés de réglages sont inchangés.
 
-Source
--------------
-1. https://github.com/agencep/ClicToPay-Mon-tique-Tunisie-1.7
+== Changelog ==
 
-2. https://github.com/sunnyluthra/smt-woocommerce-payment-gateway
+= 3.0.0 =
+* Appel de getOrderStatusExtended.do à la place de getOrderStatus.do.
+* Une commande n'est validée que si orderStatus vaut 2. L'ancienne vérification lisait une clé « ErrorMessage » inexistante et pouvait valider une commande non payée.
+* Envoi de failUrl, description, language et pageView à register.do.
+* Stockage de l'orderId ClicToPay sur la commande et dans ses notes.
+* Numéro de commande suffixé par tentative pour éviter l'erreur de doublon lors d'un réessai.
+* Montant arrondi à l'unité mineure ; prise en charge de TND, EUR et USD.
+* Remplacement de la redirection JavaScript et des deux pages auto-créées par l'endpoint /wc-api/cfw_ctp_return, validé par la clé de commande.
+* Suppression du déstockage en double : payment_complete() s'en charge déjà.
+* Abandon de get_page_by_title(), supprimée dans WordPress 6.7.
+* Journalisation de toutes les requêtes et réponses via WC_Logger.
+* Nouvel écran WooCommerce > ClicToPay Tests pour la validation de l'intégration.
+* Déclaration de compatibilité HPOS.
+* Requêtes envoyées en POST : les identifiants ne circulent plus dans l'URL.
 
-3. https://github.com/BesrourMS/ClicToPay-Woocommerce
+= 2.0.1 =
+* Correctifs d'intégration et montée de version des compatibilités.
 
+= 2.0.0 =
+* ClicToPay V2.
 
+== Upgrade Notice ==
 
-
+= 3.0.0 =
+Corrige une faille critique : une commande pouvait être marquée payée sans paiement confirmé. Mise à jour fortement recommandée. Les pages « ClicToPay Check Payment » et « Failed Payment » créées par la version 2 ne servent plus et peuvent être supprimées.

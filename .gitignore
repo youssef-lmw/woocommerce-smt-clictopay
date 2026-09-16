@@ -1,0 +1,15 @@
+# WordPress / système
+*.log
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Éditeurs
+.idea/
+.vscode/
+*.sublime-*
+
+# Archives de distribution
+*.zip

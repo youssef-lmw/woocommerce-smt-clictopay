@@ -1,6 +1,6 @@
 # WooCommerce SMT ClicToPay
 
-![Version](https://img.shields.io/badge/version-3.0.0-blue)
+![Version](https://img.shields.io/badge/version-3.0.1-blue)
 ![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-21759b)
 ![WooCommerce](https://img.shields.io/badge/WooCommerce-6.0%2B-96588a)
 ![PHP](https://img.shields.io/badge/PHP-7.2%2B-777bb4)

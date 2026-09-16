@@ -4,7 +4,7 @@ Tags: woocommerce, payment gateway, clictopay, monetique tunisie, tunisie
 Requires at least: 5.0
 Tested up to: 6.7
 Requires PHP: 7.2
-Stable tag: 3.0.0
+Stable tag: 3.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -57,6 +57,9 @@ Oui. L'identifiant de passerelle et les clés de réglages sont inchangés.
 
 == Changelog ==
 
+= 3.0.1 =
+* Demande systématiquement le gabarit DESKTOP de la page de paiement. Le gabarit MOBILE décrit dans la documentation renvoie une erreur 404 : les clients sur téléphone ne pouvaient pas payer. Le gabarit DESKTOP est responsive. Signalé par @machour (#6).
+
 = 3.0.0 =
 * Appel de getOrderStatusExtended.do à la place de getOrderStatus.do.
 * Une commande n'est validée que si orderStatus vaut 2. L'ancienne vérification lisait une clé « ErrorMessage » inexistante et pouvait valider une commande non payée.
@@ -79,6 +82,9 @@ Oui. L'identifiant de passerelle et les clés de réglages sont inchangés.
 * ClicToPay V2.
 
 == Upgrade Notice ==
+
+= 3.0.1 =
+Corrige une erreur 404 sur la page de paiement pour les clients naviguant depuis un téléphone. Mise à jour immédiate recommandée si la passerelle est en production.
 
 = 3.0.0 =
 Corrige une faille critique : une commande pouvait être marquée payée sans paiement confirmé. Mise à jour fortement recommandée. Les pages « ClicToPay Check Payment » et « Failed Payment » créées par la version 2 ne servent plus et peuvent être supprimées.

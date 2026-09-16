@@ -3,7 +3,7 @@
  * Plugin Name: WooCommerce SMT ClicToPay
  * Plugin URI: https://www.linkedin.com/in/gharbi-youssef/
  * Description: Ce module vous permet d'accepter les paiements en ligne par carte bancaire via SPS ClicToPay (Monétique Tunisie) dans WooCommerce.
- * Version: 3.0.0
+ * Version: 3.0.1
  * Author: Youssef Gharbi
  * Author URI: https://www.linkedin.com/in/gharbi-youssef/
  * License: GPL2
@@ -14,7 +14,7 @@
 
 defined('ABSPATH') or die('No script kiddies please!');
 
-define('CFW_CTP_VERSION', '3.0.0');
+define('CFW_CTP_VERSION', '3.0.1');
 define('CFW_CTP_GATEWAY_ID', 'cc_ctp');
 define('CFW_CTP_LOG_SOURCE', 'clictopay');
 
@@ -261,7 +261,9 @@ function cfw_ctp_init_credit_card_gateway_class() {
                 'failUrl'     => $this->return_url_for($order, true),
                 'description' => sprintf(__('Order %s', 'clictopay-for-woocommerce'), $order_number),
                 'language'    => $this->language,
-                'pageView'    => wp_is_mobile() ? 'MOBILE' : 'DESKTOP',
+                // Always DESKTOP: that template is responsive, while the MOBILE
+                // one described in the integration manual answers 404.
+                'pageView'    => 'DESKTOP',
             );
 
             $result = $this->api_request('register.do', $params, 'register');
